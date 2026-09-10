@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="{{ site.lang | default: 'ja' }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="{{ page.excerpt | default: site.description | strip_html | normalize_whitespace | escape }}">
+  <title>{% if page.title %}{{ page.title }} | {% endif %}{{ site.title }}</title>
+  <link rel="stylesheet" href="{{ '/assets/css/styles.css' | relative_url }}">
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="{{ '/' | relative_url }}">FA現場ノート <span>β</span></a>
+    <nav aria-label="メインメニュー">
+      <a href="{{ '/#articles' | relative_url }}">記事</a>
+      <a href="{{ '/#categories' | relative_url }}">カテゴリ</a>
+      <a href="{{ '/about/' | relative_url }}">このサイトについて</a>
+    </nav>
+  </header>
+  <main>{{ content }}</main>
+  <footer>
+    <p>© FA現場ノート</p>
+    <a href="{{ '/about/' | relative_url }}">免責事項</a>
+  </footer>
+</body>
+</html>

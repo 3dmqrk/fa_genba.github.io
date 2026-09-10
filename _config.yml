@@ -1,0 +1,9 @@
+title: FA現場ノート
+description: FA・制御機器の選定、構成、立上げを現場目線で整理する技術ブログ。
+lang: ja
+baseurl: /fa_genba.github.io
+markdown: kramdown
+permalink: /articles/:title/
+collections:
+  pages:
+    output: true

@@ -1,0 +1,14 @@
+---
+layout: default
+title: カテゴリ
+permalink: /categories/
+---
+<section class="section category-list">
+  <div class="section-heading"><h1>カテゴリ</h1></div>
+  {% for category in site.categories %}
+  <section id="{{ category[0] | uri_escape }}" class="category-block">
+    <h2>{{ category[0] }}</h2>
+    <ul>{% for post in category[1] %}<li><a href="{{ post.url | relative_url }}">{{ post.title }}</a></li>{% endfor %}</ul>
+  </section>
+  {% endfor %}
+</section>
