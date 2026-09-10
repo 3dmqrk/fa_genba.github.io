@@ -10,11 +10,13 @@ layout: default
   <div class="section-heading"><h2>新着記事</h2></div>
   <div class="article-grid">
     {% for post in site.posts %}
-    <article>
-      <p class="meta">{{ post.categories | join: ' / ' }}</p>
-      <h3><a href="{{ post.url | relative_url }}">{{ post.title }}</a></h3>
-      <p>{{ post.excerpt | strip_html | truncate: 85 }}</p>
-      <a class="read-more" href="{{ post.url | relative_url }}">続きを読む →</a>
+    <article class="article-card">
+      <a class="card-link" href="{{ post.url | relative_url }}" aria-label="{{ post.title }}を読む">
+        <p class="meta">{{ post.categories | join: ' / ' }}</p>
+        <h3>{{ post.title }}</h3>
+        <p>{{ post.excerpt | strip_html | truncate: 85 }}</p>
+        <span class="read-more">続きを読む →</span>
+      </a>
     </article>
     {% endfor %}
   </div>
