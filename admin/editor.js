@@ -90,7 +90,33 @@
   editor.addEventListener('drop', (event) => { const file = [...event.dataTransfer.files].find((item) => item.type.startsWith('image/')); if (!file) return; const rangeFromPoint = document.caretRangeFromPoint?.(event.clientX, event.clientY); if (rangeFromPoint && editor.contains(rangeFromPoint.startContainer)) pendingRange = rangeFromPoint; prepareImage(file); });
   $('crop-ratio').addEventListener('input', setCropRatio);
   const cropFrame = $('crop-frame');
-  cropFrame.addEventListener('pointerdown', (event) => { const handle = event.target.dataset.cropHandle; const stage = $('crop-image').getBoundingClientRect(); const start = { ...cropState, pointerX: event.clientX, pointerY: event.clientY }; const clamp = (value, min, max) => Math.max(min, Math.min(max, value)); const move = (moveEvent) => { const dx = (moveEvent.clientX - start.pointerX) / stage.width; const dy = (moveEvent.clientY - start.pointerY) / stage.height; let next = { x: start.x, y: start.y, w: start.w, h: start.h }; if (!handle) { next.x = clamp(start.x + dx, 0, 1 - start.w); next.y = clamp(start.y + dy, 0, 1 - start.h); } else { const right = start.x + start.w; const bottom = start.y + start.h; if (handle.includes('w')) { next.x = clamp(start.x + dx, 0, right - .08); next.w = right - next.x; } if (handle.includes('e')) next.w = clamp(start.w + dx, .08, 1 - start.x); if (handle.includes('n')) { next.y = clamp(start.y + dy, 0, bottom - .08); next.h = bottom - next.y; } if (handle.includes('s')) next.h = clamp(start.h + dy, .08, 1 - start.y); cropState = next; renderCropFrame(); }; const up = () => { window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up); }; window.addEventListener('pointermove', move); window.addEventListener('pointerup', up); });
+  cropFrame.addEventListener('pointerdown', (event) => {
+    const handle = event.target.dataset.cropHandle;
+    const stage = $('crop-image').getBoundingClientRect();
+    const start = { ...cropState, pointerX: event.clientX, pointerY: event.clientY };
+    const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
+    const move = (moveEvent) => {
+      const dx = (moveEvent.clientX - start.pointerX) / stage.width;
+      const dy = (moveEvent.clientY - start.pointerY) / stage.height;
+      const next = { x: start.x, y: start.y, w: start.w, h: start.h };
+      if (!handle) {
+        next.x = clamp(start.x + dx, 0, 1 - start.w);
+        next.y = clamp(start.y + dy, 0, 1 - start.h);
+      } else {
+        const right = start.x + start.w;
+        const bottom = start.y + start.h;
+        if (handle.includes('w')) { next.x = clamp(start.x + dx, 0, right - .08); next.w = right - next.x; }
+        if (handle.includes('e')) next.w = clamp(start.w + dx, .08, 1 - start.x);
+        if (handle.includes('n')) { next.y = clamp(start.y + dy, 0, bottom - .08); next.h = bottom - next.y; }
+        if (handle.includes('s')) next.h = clamp(start.h + dy, .08, 1 - start.y);
+      }
+      cropState = next;
+      renderCropFrame();
+    };
+    const up = () => { window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up); };
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
+  });
   $('insert-image').addEventListener('click', (event) => { event.preventDefault(); if (!pendingImage) return; const source = new Image(); source.onload = () => { const actualWidth = source.width * cropState.w; const actualHeight = source.height * cropState.h; const outputWidth = Math.min(1600, Math.round(actualWidth)); const canvas = document.createElement('canvas'); canvas.width = outputWidth; canvas.height = Math.round(outputWidth * actualHeight / actualWidth); canvas.getContext('2d').drawImage(source, source.width * cropState.x, source.height * cropState.y, actualWidth, actualHeight, 0, 0, canvas.width, canvas.height); const data = canvas.toDataURL('image/webp', .88); const filename = `${slugify(pendingImage.originalName.replace(/\.[^.]+$/, ''))}-${Date.now()}.webp`; images.set(filename, data); const figure = document.createElement('figure'); const image = new Image(); image.src = data; image.alt = $('image-alt').value; image.dataset.filename = filename; const caption = document.createElement('figcaption'); caption.textContent = $('image-caption').value; figure.append(image, caption); enableImageResize(figure); if (pendingRange) { const selection = window.getSelection(); selection.removeAllRanges(); selection.addRange(pendingRange); } selectionInsert(figure); pendingRange = null; $('crop-dialog').close(); pendingImage = null; }; source.src = pendingImage.data; });
 
   $('copy-md').addEventListener('click', async () => { await navigator.clipboard.writeText(markdown()); $('copy-md').textContent = 'コピーしました'; setTimeout(() => { $('copy-md').textContent = 'Markdownをコピー'; }, 1600); });
