@@ -9,6 +9,7 @@
   const slugify = (value) => (value || 'article').toLowerCase().normalize('NFKD').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'article';
   const selectedCategories = () => [...document.querySelectorAll('.categories input:checked')].map((input) => input.value);
   const escapeYaml = (value) => String(value || '').replace(/"/g, '\\"');
+  const escapeHtml = (value) => String(value || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   const download = (name, content, type) => { const link = document.createElement('a'); link.href = URL.createObjectURL(new Blob([content], { type })); link.download = name; link.click(); setTimeout(() => URL.revokeObjectURL(link.href), 1000); };
 
   const nodeToMarkdown = (node) => {
@@ -26,7 +27,7 @@
     if (tag === 'ol') return `\n${[...node.children].map((li, i) => `${i + 1}. ${nodeToMarkdown(li).trim()}`).join('\n')}\n`;
     if (tag === 'li') return content;
     if (tag === 'pre') { const code = node.querySelector('code'); const language = code?.dataset.language || (code?.className.match(/language-([\w-]+)/)?.[1]) || 'text'; return `\n\n\`\`\`${language}\n${code?.textContent || node.textContent}\n\`\`\`\n\n`; }
-    if (tag === 'figure') { const image = node.querySelector('img'); const caption = node.querySelector('figcaption')?.textContent.trim(); if (!image) return ''; return `\n\n![${image.alt || ''}](/assets/images/${image.dataset.filename || 'image.webp'})${caption ? `\n*${caption}*` : ''}\n\n`; }
+    if (tag === 'figure') { const image = node.querySelector('img'); const caption = node.querySelector('figcaption')?.textContent.trim(); if (!image) return ''; const src = `/assets/images/${image.dataset.filename || 'image.webp'}`; const width = image.style.width; if (!width) return `\n\n![${image.alt || ''}](${src})${caption ? `\n*${caption}*` : ''}\n\n`; return `\n\n<figure class="article-image" style="width: ${width};">\n  <img src="${src}" alt="${escapeHtml(image.alt)}">${caption ? `\n  <figcaption>${escapeHtml(caption)}</figcaption>` : ''}\n</figure>\n\n`; }
     return content;
   };
   const markdown = () => {
@@ -36,9 +37,26 @@
   };
   const preview = () => { $('preview').innerHTML = editor.innerHTML || '<p>本文を書くと、ここにプレビューが表示されます。</p>'; };
   const saveDraft = () => { try { localStorage.setItem(draftKey, JSON.stringify({ title: $('title').value, date: $('date').value, excerpt: $('excerpt').value, categories: selectedCategories(), html: editor.innerHTML })); $('save-state').textContent = '下書きをこの端末に保存しました'; } catch { $('save-state').textContent = '画像が大きいため、本文のみ保存されました'; } };
-  const restoreDraft = () => { try { const draft = JSON.parse(localStorage.getItem(draftKey)); if (!draft) return; fields.forEach((field) => { $(field).value = draft[field] || ''; }); document.querySelectorAll('.categories input').forEach((input) => { input.checked = draft.categories?.includes(input.value); }); editor.innerHTML = draft.html || ''; preview(); } catch {} };
+  const restoreDraft = () => { try { const draft = JSON.parse(localStorage.getItem(draftKey)); if (!draft) return; fields.forEach((field) => { $(field).value = draft[field] || ''; }); document.querySelectorAll('.categories input').forEach((input) => { input.checked = draft.categories?.includes(input.value); }); editor.innerHTML = draft.html || ''; editor.querySelectorAll('figure').forEach(enableImageResize); preview(); } catch {} };
   const selectionInsert = (element) => { editor.focus(); const selection = window.getSelection(); if (!selection?.rangeCount || !editor.contains(selection.anchorNode)) editor.append(element); else { const range = selection.getRangeAt(0); range.deleteContents(); range.insertNode(element); range.setStartAfter(element); selection.removeAllRanges(); selection.addRange(range); } editor.dispatchEvent(new Event('input')); };
   const insertCode = (language, source) => { const pre = document.createElement('pre'); const code = document.createElement('code'); code.dataset.language = language; code.className = `language-${language}`; code.textContent = source; pre.append(code); selectionInsert(pre); };
+  const clearImageSelection = () => editor.querySelectorAll('figure.image-selected').forEach((figure) => figure.classList.remove('image-selected'));
+  const enableImageResize = (figure) => {
+    if (figure.dataset.resizeReady) return;
+    figure.dataset.resizeReady = 'true';
+    const controls = document.createElement('span');
+    controls.className = 'image-resize-controls'; controls.contentEditable = 'false';
+    ['nw', 'ne', 'sw', 'se'].forEach((corner) => { const handle = document.createElement('button'); handle.type = 'button'; handle.className = `resize-handle ${corner}`; handle.dataset.corner = corner; handle.setAttribute('aria-label', '画像サイズを変更'); controls.append(handle); });
+    figure.append(controls);
+    figure.addEventListener('click', (event) => { if (!event.target.closest('.resize-handle')) { clearImageSelection(); figure.classList.add('image-selected'); } });
+    controls.addEventListener('pointerdown', (event) => {
+      const handle = event.target.closest('.resize-handle'); if (!handle) return;
+      event.preventDefault(); const image = figure.querySelector('img'); const startX = event.clientX; const startWidth = image.getBoundingClientRect().width; const maxWidth = figure.parentElement.getBoundingClientRect().width; const direction = handle.dataset.corner.includes('w') ? -1 : 1;
+      const move = (moveEvent) => { const width = Math.max(160, Math.min(maxWidth, startWidth + (moveEvent.clientX - startX) * direction)); image.style.width = `${Math.round(width / maxWidth * 100)}%`; figure.classList.add('image-selected'); preview(); saveDraft(); };
+      const up = () => { window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up); };
+      window.addEventListener('pointermove', move); window.addEventListener('pointerup', up);
+    });
+  };
   const slashMenu = $('slash-menu');
   let slashBlock = null;
   const setCursor = (element) => { const range = document.createRange(); range.selectNodeContents(element); range.collapse(false); const selection = window.getSelection(); selection.removeAllRanges(); selection.addRange(range); element.focus?.(); };
@@ -64,7 +82,7 @@
   $('image-input').addEventListener('change', (event) => { const file = event.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = () => { pendingImage = { data: reader.result, originalName: file.name }; $('crop-image').src = reader.result; $('image-alt').value = ''; $('image-caption').value = ''; $('crop-scale').value = 1; $('crop-x').value = 50; $('crop-y').value = 50; $('crop-dialog').showModal(); }; reader.readAsDataURL(file); event.target.value = ''; });
   const updateCrop = () => { const image = $('crop-image'); image.style.transform = `scale(${$('crop-scale').value})`; image.style.objectPosition = `${$('crop-x').value}% ${$('crop-y').value}%`; const ratio = Number($('crop-ratio').value); $('crop-frame').style.aspectRatio = ratio ? String(ratio) : 'auto'; };
   ['crop-scale', 'crop-x', 'crop-y', 'crop-ratio'].forEach((id) => $(id).addEventListener('input', updateCrop));
-  $('insert-image').addEventListener('click', (event) => { event.preventDefault(); if (!pendingImage) return; const source = new Image(); source.onload = () => { const ratio = Number($('crop-ratio').value) || source.width / source.height; const scale = Number($('crop-scale').value); const cropWidth = source.width / scale; const cropHeight = cropWidth / ratio > source.height / scale ? source.height / scale : cropWidth / ratio; const actualWidth = cropHeight * ratio; const left = (source.width - actualWidth) * Number($('crop-x').value) / 100; const top = (source.height - cropHeight) * Number($('crop-y').value) / 100; const outputWidth = Math.min(1600, Math.round(actualWidth)); const canvas = document.createElement('canvas'); canvas.width = outputWidth; canvas.height = Math.round(outputWidth / ratio); canvas.getContext('2d').drawImage(source, left, top, actualWidth, cropHeight, 0, 0, canvas.width, canvas.height); const data = canvas.toDataURL('image/webp', .88); const filename = `${slugify(pendingImage.originalName.replace(/\.[^.]+$/, ''))}-${Date.now()}.webp`; images.set(filename, data); const figure = document.createElement('figure'); const image = new Image(); image.src = data; image.alt = $('image-alt').value; image.dataset.filename = filename; const caption = document.createElement('figcaption'); caption.textContent = $('image-caption').value; figure.append(image, caption); selectionInsert(figure); $('crop-dialog').close(); pendingImage = null; }; source.src = pendingImage.data; });
+  $('insert-image').addEventListener('click', (event) => { event.preventDefault(); if (!pendingImage) return; const source = new Image(); source.onload = () => { const ratio = Number($('crop-ratio').value) || source.width / source.height; const scale = Number($('crop-scale').value); const cropWidth = source.width / scale; const cropHeight = cropWidth / ratio > source.height / scale ? source.height / scale : cropWidth / ratio; const actualWidth = cropHeight * ratio; const left = (source.width - actualWidth) * Number($('crop-x').value) / 100; const top = (source.height - cropHeight) * Number($('crop-y').value) / 100; const outputWidth = Math.min(1600, Math.round(actualWidth)); const canvas = document.createElement('canvas'); canvas.width = outputWidth; canvas.height = Math.round(outputWidth / ratio); canvas.getContext('2d').drawImage(source, left, top, actualWidth, cropHeight, 0, 0, canvas.width, canvas.height); const data = canvas.toDataURL('image/webp', .88); const filename = `${slugify(pendingImage.originalName.replace(/\.[^.]+$/, ''))}-${Date.now()}.webp`; images.set(filename, data); const figure = document.createElement('figure'); const image = new Image(); image.src = data; image.alt = $('image-alt').value; image.dataset.filename = filename; const caption = document.createElement('figcaption'); caption.textContent = $('image-caption').value; figure.append(image, caption); enableImageResize(figure); selectionInsert(figure); $('crop-dialog').close(); pendingImage = null; }; source.src = pendingImage.data; });
 
   $('copy-md').addEventListener('click', async () => { await navigator.clipboard.writeText(markdown()); $('copy-md').textContent = 'コピーしました'; setTimeout(() => { $('copy-md').textContent = 'Markdownをコピー'; }, 1600); });
   $('download-md').addEventListener('click', () => download(`${slugify($('title').value)}.md`, markdown(), 'text/markdown;charset=utf-8'));
