@@ -21,5 +21,18 @@
     <p>© FA現場ノート</p>
     <a href="{{ '/about/' | relative_url }}">免責事項</a>
   </footer>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@12.0.0/dist/mermaid.esm.min.mjs';
+    document.querySelectorAll('pre > code.language-mermaid').forEach((code) => {
+      const diagram = document.createElement('pre');
+      diagram.className = 'mermaid';
+      diagram.textContent = code.textContent;
+      code.parentElement.replaceWith(diagram);
+    });
+    if (document.querySelector('.mermaid')) {
+      mermaid.initialize({ startOnLoad: false, securityLevel: 'strict', theme: window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'default' });
+      mermaid.run({ querySelector: '.mermaid' });
+    }
+  </script>
 </body>
 </html>
