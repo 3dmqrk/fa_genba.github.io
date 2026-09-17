@@ -86,10 +86,14 @@
   const isImageFile = (file) => file && (file.type.startsWith('image/') || /\.(png|jpe?g|webp)$/i.test(file.name));
   const prepareImage = (file) => { if (!isImageFile(file)) return window.alert('PNG、JPEG、WebP形式の画像を選んでください。'); const reader = new FileReader(); reader.onload = () => { const preview = $('crop-image'); preview.onload = () => { pendingImage = { data: reader.result, originalName: file.name, ratio: preview.naturalWidth / preview.naturalHeight }; preview.parentElement.style.aspectRatio = String(pendingImage.ratio); cropState = { x: .1, y: .1, w: .8, h: .8 }; $('image-alt').value = ''; $('image-caption').value = ''; setCropRatio(); $('crop-dialog').showModal(); }; preview.src = reader.result; }; reader.readAsDataURL(file); };
   $('image-input').addEventListener('change', (event) => { prepareImage(event.target.files[0]); event.target.value = ''; });
+  $('select-image').addEventListener('click', () => $('image-input').click());
   const imageFromTransfer = (transfer) => { const files = [...(transfer.files || [])]; const itemFiles = [...(transfer.items || [])].filter((item) => item.kind === 'file').map((item) => item.getAsFile()).filter(Boolean); return [...files, ...itemFiles].find(isImageFile); };
   ['dragenter', 'dragover'].forEach((type) => editor.addEventListener(type, (event) => { if (!imageFromTransfer(event.dataTransfer)) return; event.preventDefault(); editor.classList.add('is-drag-over'); }));
   ['dragleave', 'drop'].forEach((type) => editor.addEventListener(type, (event) => { event.preventDefault(); editor.classList.remove('is-drag-over'); }));
-  editor.addEventListener('drop', (event) => { const file = imageFromTransfer(event.dataTransfer); if (!file) return window.alert('画像ファイルをドロップしてください。'); const rangeFromPoint = document.caretRangeFromPoint?.(event.clientX, event.clientY); if (rangeFromPoint && editor.contains(rangeFromPoint.startContainer)) pendingRange = rangeFromPoint; prepareImage(file); });
+  editor.addEventListener('drop', (event) => { event.stopPropagation(); const file = imageFromTransfer(event.dataTransfer); if (!file) return window.alert('画像ファイルをドロップしてください。'); const rangeFromPoint = document.caretRangeFromPoint?.(event.clientX, event.clientY); if (rangeFromPoint && editor.contains(rangeFromPoint.startContainer)) pendingRange = rangeFromPoint; prepareImage(file); });
+  const editorPanel = document.querySelector('.editor-panel');
+  ['dragenter', 'dragover'].forEach((type) => editorPanel.addEventListener(type, (event) => { if (!imageFromTransfer(event.dataTransfer)) return; event.preventDefault(); editor.classList.add('is-drag-over'); }));
+  editorPanel.addEventListener('drop', (event) => { if (editor.contains(event.target)) return; event.preventDefault(); editor.classList.remove('is-drag-over'); const file = imageFromTransfer(event.dataTransfer); if (file) prepareImage(file); });
   $('crop-ratio').addEventListener('input', setCropRatio);
   const cropFrame = $('crop-frame');
   cropFrame.addEventListener('pointerdown', (event) => {
