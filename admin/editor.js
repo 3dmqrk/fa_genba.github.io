@@ -84,7 +84,7 @@
   const renderCropFrame = () => { const frame = $('crop-frame'); frame.style.left = `${cropState.x * 100}%`; frame.style.top = `${cropState.y * 100}%`; frame.style.width = `${cropState.w * 100}%`; frame.style.height = `${cropState.h * 100}%`; };
   const setCropRatio = () => { const ratio = Number($('crop-ratio').value); if (!ratio || !pendingImage?.ratio) return renderCropFrame(); let w = .82; let h = w * pendingImage.ratio / ratio; if (h > .82) { h = .82; w = h * ratio / pendingImage.ratio; } cropState = { x: (1 - w) / 2, y: (1 - h) / 2, w, h }; renderCropFrame(); };
   const isImageFile = (file) => file && (file.type.startsWith('image/') || /\.(png|jpe?g|webp)$/i.test(file.name));
-  const prepareImage = (file) => { if (!isImageFile(file)) return window.alert('PNG、JPEG、WebP形式の画像を選んでください。'); const reader = new FileReader(); reader.onload = () => { const preview = $('crop-image'); preview.onload = () => { pendingImage = { data: reader.result, originalName: file.name, ratio: preview.naturalWidth / preview.naturalHeight }; preview.parentElement.style.aspectRatio = String(pendingImage.ratio); cropState = { x: .1, y: .1, w: .8, h: .8 }; $('image-alt').value = ''; $('image-caption').value = ''; setCropRatio(); $('crop-dialog').showModal(); }; preview.src = reader.result; }; reader.readAsDataURL(file); };
+  const prepareImage = (file) => { if (!isImageFile(file)) return window.alert('PNG、JPEG、WebP形式の画像を選んでください。'); const reader = new FileReader(); reader.onload = () => { const preview = $('crop-image'); preview.onload = () => { pendingImage = { data: reader.result, originalName: file.name, ratio: preview.naturalWidth / preview.naturalHeight }; preview.parentElement.style.aspectRatio = String(pendingImage.ratio); cropState = { x: 0, y: 0, w: 1, h: 1 }; $('image-alt').value = ''; $('image-caption').value = ''; setCropRatio(); $('crop-dialog').showModal(); }; preview.src = reader.result; }; reader.readAsDataURL(file); };
   $('image-input').addEventListener('change', (event) => { prepareImage(event.target.files[0]); event.target.value = ''; });
   $('select-image').addEventListener('click', () => $('image-input').click());
   const imageFromTransfer = (transfer) => { const files = [...(transfer.files || [])]; const itemFiles = [...(transfer.items || [])].filter((item) => item.kind === 'file').map((item) => item.getAsFile()).filter(Boolean); return [...files, ...itemFiles].find(isImageFile); };
@@ -97,6 +97,8 @@
   $('crop-ratio').addEventListener('input', setCropRatio);
   const cropFrame = $('crop-frame');
   cropFrame.addEventListener('pointerdown', (event) => {
+    event.preventDefault();
+    cropFrame.setPointerCapture?.(event.pointerId);
     const handle = event.target.dataset.cropHandle;
     const stage = $('crop-image').getBoundingClientRect();
     const start = { ...cropState, pointerX: event.clientX, pointerY: event.clientY };
@@ -119,7 +121,7 @@
       cropState = next;
       renderCropFrame();
     };
-    const up = () => { window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up); };
+    const up = () => { cropFrame.releasePointerCapture?.(event.pointerId); window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up); };
     window.addEventListener('pointermove', move);
     window.addEventListener('pointerup', up);
   });
