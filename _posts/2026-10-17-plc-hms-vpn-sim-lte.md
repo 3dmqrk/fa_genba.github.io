@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "PLCのデータ収集にHMSは必要か？ VPN SIM・LTEルーターの費用と選び方"
-date: 2026-10-17 12:00:00 +0900
+date: 2026-10-17 00:00:00 +0900
 categories: ["PLC・産業用コントローラ", "産業ネットワーク・通信", "選定の考え方"]
 excerpt: "工場LANを使えないPLCから本社へデータを集める方法を、HMS Ewon、VPN付きSIM、Tailscaleで比較。初期費用・3年間の通信費・遠隔復旧のしやすさを整理する。"
 ---
