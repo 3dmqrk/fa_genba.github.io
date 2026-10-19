@@ -3,9 +3,10 @@ description: FA・制御機器の選定、構成、立上げを現場目線で�
 lang: ja
 timezone: Asia/Tokyo
 baseurl: /fa_genba.github.io
-markdown: GFM
+markdown: kramdown
+kramdown:
+  input: GFM
 permalink: /articles/:title/
 collections:
   pages:
     output: true
-
