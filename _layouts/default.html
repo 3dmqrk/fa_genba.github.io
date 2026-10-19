@@ -6,6 +6,7 @@
   <meta name="description" content="{{ page.excerpt | default: site.description | strip_html | normalize_whitespace | escape }}">
   <title>{% if page.title %}{{ page.title }} | {% endif %}{{ site.title }}</title>
   <link rel="stylesheet" href="{{ '/assets/css/styles.css' | relative_url }}">
+  <link rel="stylesheet" href="{{ '/assets/css/mermaid.css' | relative_url }}">
 </head>
 <body>
   <header class="site-header">
@@ -36,3 +37,4 @@
   </script>
 </body>
 </html>
+

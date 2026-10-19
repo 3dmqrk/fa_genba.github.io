@@ -11,5 +11,37 @@
 .post-content th { background:var(--paper); font-weight:700; }
 .post-content hr { margin:1.5rem 0; border:0; border-top:1px solid var(--line); }
 .post-content figure.article-image { max-width:100%; margin:2rem auto; }.post-content figure.article-image img { display:block; max-width:100%; height:auto; }.post-content figure.article-image figcaption { margin-top:.5rem; color:var(--muted); font-size:.85rem; }
+/* 補足・注意ボックス(コールアウト) */
+.post-content .callout { --callout-color:#2585cf; --callout-bg:rgba(37,133,207,.08); --callout-label:"ℹ 補足"; margin:1.5rem 0; padding:13px 17px; border:1px solid var(--line); border-left:4px solid var(--callout-color); border-radius:8px; background:var(--callout-bg); line-height:1.8; }
+.post-content .callout::before { content:var(--callout-label); display:block; margin:0 0 5px; color:var(--callout-color); font-weight:800; font-size:.84rem; letter-spacing:.05em; }
+.post-content .callout > * { margin:0; line-height:1.75; }
+.post-content .callout > * + * { margin-top:8px; }
+.post-content .callout ul,.post-content .callout ol { padding-left:1.3em; }
+.post-content .callout-note { --callout-color:#2585cf; --callout-label:"ℹ 補足"; --callout-bg:rgba(37,133,207,.08); }
+.post-content .callout-tip { --callout-color:#0e8f5a; --callout-label:"✔ ポイント"; --callout-bg:rgba(14,143,90,.1); }
+.post-content .callout-warn { --callout-color:#c4660c; --callout-label:"⚠ 注意"; --callout-bg:rgba(196,102,12,.09); }
+.post-content .callout-danger { --callout-color:#d03a49; --callout-label:"❗ 重要"; --callout-bg:rgba(208,58,73,.08); }
+.post-content .callout-summary { --callout-color:#31548e; --callout-label:"▶ 結論"; --callout-bg:rgba(49,84,142,.09); }
+/* 会話形式(ふきだし) */
+.post-content .chat-bubble { margin:1.2rem 0; max-width:86%; padding:11px 16px; border-radius:14px; font-size:.96rem; line-height:1.8; }
+.post-content .chat-user { margin-left:auto; background:rgba(37,133,207,.12); border:1px solid rgba(37,133,207,.35); border-radius:14px 14px 4px 14px; }
+.post-content .chat-ai { background:var(--paper); border:1px solid var(--line); border-radius:14px 14px 14px 4px; }
+.post-content .chat-user::before { content:"質問"; display:block; margin:0 0 3px; color:#2585cf; font-size:.75rem; font-weight:800; text-align:right; }
+.post-content .chat-ai::before { content:"回答"; display:block; margin:0 0 3px; color:var(--muted); font-size:.75rem; font-weight:800; }
+/* 折りたたみ(details) */
+.post-content details.fold { margin:1.4rem 0; padding:10px 18px 12px; background:var(--paper); border:1px solid var(--line); border-radius:8px; }
+.post-content details.fold summary { margin:0; padding:5px 0; color:var(--ink); font-weight:700; cursor:pointer; list-style:none; }
+.post-content details.fold summary::marker { content:""; }.post-content details.fold summary::-webkit-details-marker { display:none; }
+.post-content details.fold summary::before { content:"▸"; margin-right:8px; color:var(--blue); }
+.post-content details.fold[open] summary::before { content:"▾"; }
+.post-content details.fold > :not(summary) { margin:0; }.post-content details.fold > * + * { margin-top:8px; }
+/* チェックリスト */
+.post-content li:has(> input[type=checkbox]) { list-style:none; margin-left:-1.4em; }
+.post-content li > input[type=checkbox] { margin-right:.5em; accent-color:#2585cf; transform:scale(1.12); }
+.post-content ul[data-task-list] { list-style:none; margin:1rem 0; padding:0; }
+.post-content ul[data-task-list] li { position:relative; margin:6px 0; padding-left:30px; min-height:20px; }
+.post-content ul[data-task-list] li::before { content:""; position:absolute; left:4px; top:5px; width:16px; height:16px; border:2px solid var(--muted); border-radius:4px; background:var(--paper); }
+.post-content ul[data-task-list] li[data-task-checked="true"]::before { content:"✓"; display:grid; place-items:center; border-color:#0e8f5a; background:#0e8f5a; color:#fff; font-size:11px; font-weight:900; }
 @media (prefers-color-scheme: dark) { :root { --ink:#e6edf3; --muted:#9fb0c0; --paper:#0d1117; --white:#161b22; --line:#30363d; --blue:#58b6ff; } }
 @media (max-width:760px) { .site-header { padding:0 18px; }nav { gap:14px; font-size:.8rem; }.intro { padding:38px 18px 30px; }.section { padding:32px 18px; }.article-grid,.about { grid-template-columns:1fr; }.categories { grid-template-columns:1fr; }.about { margin-bottom:24px; padding:28px 18px; gap:18px; }.post-wrap { margin:24px 18px 42px; padding:24px; }footer { padding:20px 18px; flex-wrap:wrap; gap:12px; }footer p { flex-basis:100%; } }
+

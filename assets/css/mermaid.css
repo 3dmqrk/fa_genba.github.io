@@ -1,0 +1,4 @@
+.post-content .mermaid-container{max-width:100%;margin:1.25rem auto;zoom:var(--mermaid-zoom,1)}
+.post-content .mermaid-container .mermaid{display:block;width:100%;margin:0;padding:4px;background:var(--white);text-align:center}
+.post-content .mermaid-container .mermaid svg{display:block;width:100%!important;height:auto;margin:0 auto}
+
